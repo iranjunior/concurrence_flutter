@@ -18,19 +18,25 @@ class _HomePageState extends State<HomePage> {
     super.initState();
   }
 
-  Future calculateNewValue(
-      {void Function(Map<String, dynamic>)? onComplete}) async {
+  Future calculateNewValue({
+    // recebe uma função de callback
+    void Function(Map<String, dynamic>)? onComplete,
+  }) async {
+    // Cria o menssageiro
     ReceivePort receivePort = ReceivePort();
 
     final isolate = await Isolate.spawn<SendPort>(
       RequestsHomePage.calledGithub,
       receivePort.sendPort,
     );
-
+    // fica escutando as mensagens
     receivePort.listen((event) {
       if (onComplete != null) {
         onComplete(event);
       }
+      // se receber algo diferente de null
+      // significa que finalizou a request
+      // então a thread é encerrada
       if (event != null) {
         isolate.kill();
       }
@@ -62,11 +68,13 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.person),
-        onPressed: () => calculateNewValue(onComplete: (response) {
-          setState(() {
-            user = response;
-          });
-        }),
+        onPressed: () => calculateNewValue(
+          onComplete: (response) {
+            setState(() {
+              user = response;
+            });
+          },
+        ),
       ),
     );
   }
